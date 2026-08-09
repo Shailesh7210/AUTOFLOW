@@ -1,0 +1,4 @@
+subdomain: local
+region: local
+hasura:
+  adminSecret: nhost-admin-secret
