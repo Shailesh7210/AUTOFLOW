@@ -20,6 +20,7 @@ interface ReactFlowCanvasProps {
   stepRuns?: StepRun[];
   onSelectStep: (step: WorkflowStep) => void;
   onAddStepType: (type: WorkflowStep['type']) => void;
+  onDeleteStep?: (stepId: string) => void;
 }
 
 export default function ReactFlowCanvas({
@@ -27,6 +28,7 @@ export default function ReactFlowCanvas({
   stepRuns = [],
   onSelectStep,
   onAddStepType,
+  onDeleteStep,
 }: ReactFlowCanvasProps) {
   const { activeRole } = useOrg();
   const [isMounted, setIsMounted] = useState(false);
@@ -44,6 +46,7 @@ export default function ReactFlowCanvas({
         type: step.type,
         position: { x: 280, y: idx * 160 + 40 },
         data: {
+          stepId: step.id,
           label: step.name,
           type: step.type,
           stepOrder: step.step_order,
@@ -51,10 +54,11 @@ export default function ReactFlowCanvas({
           typeRole: step.type_role,
           status: run?.status,
           output: run?.output,
+          onDeleteStep,
         },
       };
     });
-  }, [steps, stepRuns]);
+  }, [steps, stepRuns, onDeleteStep]);
 
   // Controlled edge list derived directly from sequential steps
   const edges: Edge[] = useMemo(() => {

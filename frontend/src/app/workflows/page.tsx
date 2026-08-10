@@ -2,13 +2,17 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useOrg } from '@/context/OrgContext';
-import { Plus, Play, Layers, Bot, ArrowRight, Lock } from 'lucide-react';
+import { Plus, Play, Layers, Bot, ArrowRight, Lock, Trash2 } from 'lucide-react';
 import RoleGate from '@/components/RoleGate';
+import DeleteWorkflowModal from '@/components/DeleteWorkflowModal';
 
 export default function WorkflowsListPage() {
-  const { workflows, addWorkflow, triggerRun, activeRole } = useOrg();
+  const router = useRouter();
+  const { workflows, addWorkflow, triggerRun, activeRole, deleteWorkflow } = useOrg();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
 
@@ -53,7 +57,7 @@ export default function WorkflowsListPage() {
     setIsModalOpen(false);
     setNewTitle('');
     setNewDesc('');
-    window.location.href = `/workflows/${created.id}`;
+    router.push(`/workflows/${created.id}`);
   };
 
   return (
@@ -128,15 +132,23 @@ export default function WorkflowsListPage() {
                     onClick={() => {
                       const res = triggerRun(wf.id);
                       if (res.success && res.runId) {
-                        window.location.href = `/workflows/${wf.id}/run/${res.runId}`;
+                        router.push(`/workflows/${wf.id}/run/${res.runId}`);
                       } else {
                         alert(res.error || 'Failed to trigger run');
                       }
                     }}
-                    className="py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-600/30 transition-all flex items-center gap-1.5"
+                    className="py-2.5 px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-600/30 transition-all flex items-center gap-1.5"
                   >
                     <Play className="w-3.5 h-3.5 fill-current" />
                     Run
+                  </button>
+
+                  <button
+                    onClick={() => setDeleteTarget({ id: wf.id, name: wf.name })}
+                    title="Delete Workflow"
+                    className="p-2.5 rounded-xl bg-gray-900 hover:bg-rose-950/60 border border-gray-800 hover:border-rose-800 text-gray-400 hover:text-rose-300 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </RoleGate>
               </div>
@@ -193,6 +205,19 @@ export default function WorkflowsListPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteWorkflowModal
+        isOpen={!!deleteTarget}
+        workflowName={deleteTarget?.name || ''}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) {
+            deleteWorkflow(deleteTarget.id);
+            setDeleteTarget(null);
+          }
+        }}
+      />
     </div>
   );
 }

@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useOrg } from '@/context/OrgContext';
 import {
   Bot,
@@ -11,14 +12,16 @@ import {
   ArrowRight,
   ShieldCheck,
   Building2,
-  Clock,
   Activity,
-  CheckCircle2,
+  Trash2,
 } from 'lucide-react';
 import RoleGate from '@/components/RoleGate';
+import DeleteWorkflowModal from '@/components/DeleteWorkflowModal';
 
 export default function DashboardPage() {
-  const { activeOrg, activeRole, workflows, triggerRun } = useOrg();
+  const router = useRouter();
+  const { activeOrg, activeRole, workflows, triggerRun, deleteWorkflow } = useOrg();
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   const totalWorkflows = workflows.length;
   const activeTriggers = workflows.reduce((acc, w) => acc + w.triggers.length, 0);
@@ -166,10 +169,10 @@ export default function DashboardPage() {
 
               <div className="flex items-center justify-between text-xs text-gray-400 pt-3 border-t border-gray-800/80">
                 <span className="font-mono">{wf.steps.length} Step Nodes</span>
-                <span className="font-mono text-gray-500">{wf.triggers.length} Triggers</span>
+                <span className="font-mono text-gray-500">{wf.triggers.length} Trigger</span>
               </div>
 
-              <div className="flex items-center gap-3 pt-2">
+              <div className="flex items-center gap-2 pt-2">
                 <Link
                   href={`/workflows/${wf.id}`}
                   className="flex-1 text-center py-2 rounded-xl bg-gray-900 hover:bg-gray-800 border border-gray-800 text-xs font-semibold text-gray-200 transition-colors"
@@ -182,15 +185,23 @@ export default function DashboardPage() {
                     onClick={() => {
                       const res = triggerRun(wf.id);
                       if (res.success && res.runId) {
-                        window.location.href = `/workflows/${wf.id}/run/${res.runId}`;
+                        router.push(`/workflows/${wf.id}/run/${res.runId}`);
                       } else {
                         alert(res.error || 'Failed to trigger run');
                       }
                     }}
-                    className="py-2 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-600/30 transition-all flex items-center gap-1.5"
+                    className="py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-600/30 transition-all flex items-center gap-1.5"
                   >
                     <Play className="w-3.5 h-3.5 fill-current" />
-                    Run Workflow
+                    Run
+                  </button>
+
+                  <button
+                    onClick={() => setDeleteTarget({ id: wf.id, name: wf.name })}
+                    title="Delete Workflow"
+                    className="p-2 rounded-xl bg-gray-900 hover:bg-rose-950/60 border border-gray-800 hover:border-rose-800 text-gray-400 hover:text-rose-300 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </RoleGate>
               </div>
@@ -198,6 +209,18 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
+
+      <DeleteWorkflowModal
+        isOpen={!!deleteTarget}
+        workflowName={deleteTarget?.name || ''}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) {
+            deleteWorkflow(deleteTarget.id);
+            setDeleteTarget(null);
+          }
+        }}
+      />
     </div>
   );
 }

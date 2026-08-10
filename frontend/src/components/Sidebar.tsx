@@ -24,21 +24,22 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`glass-panel border-r border-gray-800/80 flex flex-col justify-between transition-all duration-300 sticky top-0 h-screen overflow-y-auto shrink-0 z-40 ${
+      className={`glass-panel border-r border-gray-800/80 flex flex-col justify-between transition-all duration-300 relative sticky top-0 h-screen shrink-0 z-40 ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}
     >
       {/* Collapse Toggle */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-8 w-6 h-6 rounded-full bg-gray-900 border border-gray-700 text-gray-400 hover:text-white flex items-center justify-center shadow-md z-50"
+        title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        className="absolute -right-3 top-8 w-6 h-6 rounded-full bg-gray-900 border border-gray-700 text-gray-400 hover:text-white flex items-center justify-center shadow-md z-50 transition-colors"
       >
         {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
       </button>
 
       {/* Top Header & Brand */}
-      <div className="p-4 space-y-6">
-        <Link href="/" className="flex items-center gap-3 group">
+      <div className="p-4 space-y-6 flex-1 overflow-y-auto">
+        <Link href="/" className={`flex items-center gap-3 group ${isCollapsed ? 'justify-center' : ''}`}>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform shrink-0">
             <Bot className="w-6 h-6 text-white" />
           </div>
@@ -58,7 +59,10 @@ export default function Sidebar() {
         <nav className="space-y-1">
           <Link
             href="/"
-            className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+            title="Dashboard"
+            className={`flex items-center gap-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+              isCollapsed ? 'justify-center px-0' : 'px-3.5'
+            } ${
               pathname === '/'
                 ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 shadow-sm'
                 : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
@@ -70,7 +74,10 @@ export default function Sidebar() {
 
           <Link
             href="/workflows"
-            className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+            title="Workflows Canvas"
+            className={`flex items-center gap-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+              isCollapsed ? 'justify-center px-0' : 'px-3.5'
+            } ${
               pathname.startsWith('/workflows')
                 ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 shadow-sm'
                 : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
@@ -82,7 +89,10 @@ export default function Sidebar() {
 
           <Link
             href="/login"
-            className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+            title="Tenant & Role Simulator"
+            className={`flex items-center gap-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+              isCollapsed ? 'justify-center px-0' : 'px-3.5'
+            } ${
               pathname === '/login'
                 ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 shadow-sm'
                 : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'

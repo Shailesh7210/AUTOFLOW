@@ -8,20 +8,24 @@ import StepList from '@/components/WorkflowBuilder/StepList';
 import StepEditor from '@/components/WorkflowBuilder/StepEditor';
 import TriggerPicker from '@/components/WorkflowBuilder/TriggerPicker';
 import RoleGate from '@/components/RoleGate';
-import { Play, ArrowLeft, Bot, Save, Lock, LayoutGrid, List } from 'lucide-react';
+import DeleteWorkflowModal from '@/components/DeleteWorkflowModal';
+import DeleteStepModal from '@/components/DeleteStepModal';
+import { Play, ArrowLeft, Bot, Save, Lock, LayoutGrid, List, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function WorkflowBuilderPage() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
-  const { workflows, updateWorkflowSteps, updateWorkflowTriggers, triggerRun, activeRole } = useOrg();
+  const { workflows, updateWorkflowSteps, updateWorkflowTriggers, triggerRun, deleteWorkflow, activeRole } = useOrg();
 
   const workflow = workflows.find((w) => w.id === id);
 
   const [viewMode, setViewMode] = useState<'canvas' | 'list'>('canvas');
   const [selectedStep, setSelectedStep] = useState<WorkflowStep | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingStep, setDeletingStep] = useState<WorkflowStep | null>(null);
 
   if (!workflow) {
     return (
@@ -78,6 +82,13 @@ export default function WorkflowBuilderPage() {
       .filter((s) => s.id !== stepId)
       .map((s, idx) => ({ ...s, step_order: idx + 1 }));
     updateWorkflowSteps(workflow.id, filtered);
+  };
+
+  const handleRequestDeleteStep = (stepId: string) => {
+    const target = workflow.steps.find((s) => s.id === stepId);
+    if (target) {
+      setDeletingStep(target);
+    }
   };
 
   const handleMoveStep = (index: number, direction: 'up' | 'down') => {
@@ -185,6 +196,14 @@ export default function WorkflowBuilderPage() {
             >
               <Play className="w-4 h-4 fill-current" /> Execute Workflow
             </button>
+
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              title="Delete Workflow"
+              className="p-2 rounded-xl bg-gray-900 hover:bg-rose-950/60 border border-gray-800 hover:border-rose-800 text-gray-400 hover:text-rose-300 transition-colors flex items-center gap-1.5 text-xs font-semibold"
+            >
+              <Trash2 className="w-4 h-4" /> Delete
+            </button>
           </RoleGate>
         </div>
       </div>
@@ -201,6 +220,7 @@ export default function WorkflowBuilderPage() {
             setIsEditorOpen(true);
           }}
           onAddStepType={handleAddStepType}
+          onDeleteStep={handleRequestDeleteStep}
         />
       ) : (
         <StepList
@@ -209,7 +229,7 @@ export default function WorkflowBuilderPage() {
             setSelectedStep(step);
             setIsEditorOpen(true);
           }}
-          onDeleteStep={handleDeleteStep}
+          onDeleteStep={handleRequestDeleteStep}
           onMoveStep={handleMoveStep}
           onAddStepClick={() => {
             setSelectedStep(null);
@@ -224,6 +244,32 @@ export default function WorkflowBuilderPage() {
         isOpen={isEditorOpen}
         onClose={() => setIsEditorOpen(false)}
         onSave={handleSaveStep}
+        onDelete={handleRequestDeleteStep}
+      />
+
+      {/* Delete Workflow Modal */}
+      <DeleteWorkflowModal
+        isOpen={isDeleteModalOpen}
+        workflowName={workflow.name}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={() => {
+          deleteWorkflow(workflow.id);
+          router.push('/workflows');
+        }}
+      />
+
+      {/* Delete Step Node Modal */}
+      <DeleteStepModal
+        isOpen={!!deletingStep}
+        stepName={deletingStep?.name || ''}
+        stepType={deletingStep?.type}
+        onClose={() => setDeletingStep(null)}
+        onConfirm={() => {
+          if (deletingStep) {
+            handleDeleteStep(deletingStep.id);
+            setDeletingStep(null);
+          }
+        }}
       />
     </div>
   );

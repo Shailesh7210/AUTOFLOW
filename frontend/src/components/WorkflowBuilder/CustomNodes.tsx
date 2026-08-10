@@ -14,10 +14,12 @@ import {
   RefreshCw,
   PauseCircle,
   AlertCircle,
+  Trash2,
 } from 'lucide-react';
 import { STEP_TYPE_ICONS } from './StepList';
 
 export type CustomNodeData = Record<string, unknown> & {
+  stepId: string;
   label: string;
   type: string;
   stepOrder: number;
@@ -25,6 +27,7 @@ export type CustomNodeData = Record<string, unknown> & {
   typeRole: string;
   status?: 'pending' | 'running' | 'paused' | 'completed' | 'failed';
   output?: any;
+  onDeleteStep?: (stepId: string) => void;
 };
 
 export type AppNode = Node<CustomNodeData>;
@@ -71,12 +74,12 @@ const NodeWrapper = ({
           <div className={`p-1.5 rounded-lg ${meta.bg} border flex items-center justify-center`}>
             <Icon className={`w-3.5 h-3.5 ${meta.color}`} />
           </div>
-          <span className="text-xs font-bold text-gray-100 truncate max-w-[110px]">
+          <span className="text-xs font-bold text-gray-100 truncate max-w-[95px]">
             {data.label}
           </span>
         </div>
 
-        {/* Badges */}
+        {/* Badges & Actions */}
         <div className="flex items-center gap-1">
           {isOwnerRequired && (
             <span className="p-1 rounded-md bg-purple-950/80 border border-purple-800 text-purple-300" title="Owner Role Required">
@@ -87,6 +90,20 @@ const NodeWrapper = ({
           {data.status === 'running' && <RefreshCw className="w-4 h-4 text-indigo-400 animate-spin" />}
           {data.status === 'paused' && <PauseCircle className="w-4 h-4 text-amber-400 animate-bounce" />}
           {data.status === 'failed' && <AlertCircle className="w-4 h-4 text-rose-400" />}
+
+          {data.onDeleteStep && (
+            <button
+              type="button"
+              title="Delete Step Node"
+              onClick={(e) => {
+                e.stopPropagation();
+                data.onDeleteStep?.(data.stepId);
+              }}
+              className="p-1 rounded-md text-gray-400 hover:text-rose-400 hover:bg-rose-950/60 transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

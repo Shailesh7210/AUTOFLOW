@@ -83,6 +83,7 @@ interface OrgContextType {
   activeRuns: Record<string, WorkflowRun>;
   triggerRun: (workflowId: string) => { success: boolean; runId?: string; error?: string };
   approveStepRun: (stepRunId: string) => { success: boolean; error?: string };
+  deleteWorkflow: (id: string) => { success: boolean; error?: string };
 }
 
 const DEFAULT_ORGS: Organization[] = [
@@ -205,6 +206,27 @@ export const OrgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [workflows, setWorkflows] = useState<Workflow[]>(SAMPLE_WORKFLOWS);
   const [activeRuns, setActiveRuns] = useState<Record<string, WorkflowRun>>({});
 
+  // Sync state with localStorage on client mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('autoflow_workflows');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setWorkflows(parsed);
+          }
+        } catch (e) {}
+      }
+    }
+  }, []);
+
+  const saveToStorage = (updatedWorkflows: Workflow[]) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('autoflow_workflows', JSON.stringify(updatedWorkflows));
+    }
+  };
+
   const activeOrg = organizations.find((o) => o.id === activeOrgId) || organizations[0];
 
   const setActiveOrgId = (id: string) => {
@@ -235,23 +257,57 @@ export const OrgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ],
       steps: wf.steps || [],
     };
-    setWorkflows((prev) => [newWf, ...prev]);
+
+    setWorkflows((prev) => {
+      const updated = [newWf, ...prev];
+      saveToStorage(updated);
+      return updated;
+    });
+
     return newWf;
   };
 
   const updateWorkflowSteps = (workflowId: string, steps: WorkflowStep[]) => {
-    setWorkflows((prev) =>
-      prev.map((w) => (w.id === workflowId ? { ...w, steps } : w))
-    );
+    setWorkflows((prev) => {
+      const updated = prev.map((w) => (w.id === workflowId ? { ...w, steps } : w));
+      saveToStorage(updated);
+      return updated;
+    });
   };
 
   const updateWorkflowTriggers = (workflowId: string, triggers: WorkflowTrigger[]) => {
-    setWorkflows((prev) =>
-      prev.map((w) => (w.id === workflowId ? { ...w, triggers } : w))
-    );
+    setWorkflows((prev) => {
+      const updated = prev.map((w) => (w.id === workflowId ? { ...w, triggers } : w));
+      saveToStorage(updated);
+      return updated;
+    });
   };
 
-  // Trigger workflow run (Supports live simulation + local engine)
+  const deleteWorkflow = (id: string) => {
+    if (activeRole === 'viewer') {
+      return { success: false, error: 'Viewer role is blocked from deleting workflows' };
+    }
+
+    setWorkflows((prev) => {
+      const updated = prev.filter((w) => w.id !== id);
+      saveToStorage(updated);
+      return updated;
+    });
+
+    setActiveRuns((prev) => {
+      const copy = { ...prev };
+      for (const key of Object.keys(copy)) {
+        if (copy[key].workflow_id === id) {
+          delete copy[key];
+        }
+      }
+      return copy;
+    });
+
+    return { success: true };
+  };
+
+  // Trigger workflow run
   const triggerRun = (workflowId: string) => {
     const wf = workflows.find((w) => w.id === workflowId);
     if (!wf) return { success: false, error: 'Workflow not found' };
@@ -479,6 +535,7 @@ export const OrgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         activeRuns,
         triggerRun,
         approveStepRun,
+        deleteWorkflow,
       }}
     >
       {children}
