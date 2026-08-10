@@ -24,7 +24,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`glass-panel border-r border-gray-800/80 flex flex-col justify-between transition-all duration-300 relative z-40 ${
+      className={`glass-panel border-r border-gray-800/80 flex flex-col justify-between transition-all duration-300 sticky top-0 h-screen overflow-y-auto shrink-0 z-40 ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}
     >
@@ -95,7 +95,7 @@ export default function Sidebar() {
       </div>
 
       {/* Bottom Tenant & Quota Controls */}
-      <div className="p-4 space-y-4 border-t border-gray-900/80">
+      <div className="p-4 space-y-4 border-t border-gray-900/80 bg-gray-950/60 shrink-0">
         {!isCollapsed ? (
           <>
             {/* Quota Badge */}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   ReactFlow,
   Controls,
@@ -29,6 +29,11 @@ export default function ReactFlowCanvas({
   onAddStepType,
 }: ReactFlowCanvasProps) {
   const { activeRole } = useOrg();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Controlled node list derived directly from steps
   const nodes: AppNode[] = useMemo(() => {
@@ -72,6 +77,14 @@ export default function ReactFlowCanvas({
       onSelectStep(targetStep);
     }
   };
+
+  if (!isMounted) {
+    return (
+      <div className="flex h-[600px] w-full glass-panel rounded-3xl items-center justify-center border border-gray-800 text-xs text-gray-400 font-mono">
+        Loading Workfield Canvas...
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-[600px] w-full glass-panel rounded-3xl overflow-hidden border border-gray-800 relative">
