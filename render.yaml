@@ -1,0 +1,15 @@
+services:
+  # AutoFlow Next.js Frontend Web Service
+  - type: web
+    name: autoflow-frontend
+    runtime: node
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm run start
+    envVars:
+      - key: NODE_VERSION
+        value: 18.18.0
+      - key: NEXT_PUBLIC_NHOST_SUBDOMAIN
+        value: local
+      - key: NEXT_PUBLIC_NHOST_REGION
+        value: local
